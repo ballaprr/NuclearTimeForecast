@@ -1,0 +1,113 @@
+
+
+- Region 1: 20, 12
+
+One Reactor:
+	- FitzPatrick
+	- Ginna
+	- Hope Creek
+	- Seabrook
+Two Reactors:
+	- Beaver Valley
+	- Calvert Cliffs
+	- Limerick
+	- Millstone
+	- Nine Mile Point
+	- Peach Bottom
+	- Salem
+	- Susquehanna
+
+
+- Region 2: 35, 17
+
+One Reactor:
+	- Harris
+	- Robinson
+	- Summer
+Two Reactors:
+	- Brunswick
+	- Catawba
+	- Farley
+	- Hatch
+	- McGuire
+	- North Anna
+	- Saint Lucie
+	- Sequoyah 
+	- Surry
+	- Turkey Point
+	- Watts Bar
+Three Reactors:
+	- Browns Ferry
+	- Oconee
+Four Reactors:
+	- Vogtle
+	
+	
+- Region 3: 21, 13
+
+One Reactor:
+	- Clinton
+	- Davis-Besse
+	- Fermi
+	- Monticello
+	- Perry
+Two Reactors:
+	- Braidwood
+	- Byron
+	- D.C. Cook
+	- Dresden
+	- LaSalle
+	- Point Beach
+	- Prairie Island
+	- Quad Cities
+	
+	
+- Region 4: 18, 12
+
+One Reactor:
+	- Callaway
+	- Columbia Generating Station
+	- Cooper
+	- Grand Gulf
+	- River Bend Station
+	- Waterford
+	- Wolf Creek
+Two Reactors:
+	- Arkansas Nuclear
+	- Comanche Peak
+	- Diable Canyon
+	- South Texas
+Three Reactors:
+	- Palo Verde
+	
+	
+	
+	
+Reason or Comments:
+
+Steam Generator limitations: 99
+Increasing Power: 1, 29, 30, 13, 50, 90, 30, 71
+Reduced Power for Maintenance: 96, 85
+Reduced Power for Rod Pattern Adjustment: 87, 89
+Refueling Outage: 0
+Forced Outage; Main Generator Maintenance: 0
+Holding Power for Fuel Efficieny: 65, 70
+100% Electrical Capability: 99
+Maintenance Outage: 0
+Reduced power for Maintenance: 0, 84
+Holdeing Power: 33
+High Voltage Alert: 100
+Down Power Contingency to 1000 MWe: 100
+High System Voltage Action: 100
+Increasing Power Following outage: 12
+
+
+
+# Data Extraction: https://www.nrc.gov/reading-rm/doc-collections/event-status/reactor-status/2025/index.html
+
+year = '2025'
+date = '20250627'
+
+'https://www.nrc.gov/reading-rm/doc-collections/event-status/reactor-status/' + {year} + '/' + {date} + 'ps.html'
+
+
