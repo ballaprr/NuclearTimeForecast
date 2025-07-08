@@ -2,7 +2,8 @@ from django.db import models
 
 # Create your models here.
 
-
+# Reactors: Reactor Names
+# fields: latitude, longitude, power output, region
 class Reactor(models.Model):
 
     REGION_CHOICES = [
@@ -37,9 +38,24 @@ class ReactorStatus(models.Model):
     def __str__(self):
         return f"{self.unit} - {self.report_date}"
     
-# Reactors: Reactor Names
-# fields: latitude, longitude, power output, region
 
 # Class for StubOutage
+class StubOutage(models.Model):
+    reactor = models.ForeignKey('Reactor', on_delete=models.CASCADE, null=True, blank=True)
+    date_detected = models.DateField()
+    description = models.TextField(blank=True)
+    auto_detected = models.BooleanField(default=False)
+    confirmed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
+class ReactorForecast(models.Model):
+    reactor = models.ForeignKey('Reactor', on_delete=models.CASCADE, null=True, blank=True)
+    df = models.TextField() # Forecast date
+    yhat = models.FloatField() # Predicted power
+    yhat_lower = models.FloatField()
+    yhat_upper = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('reactor', 'created_at')
