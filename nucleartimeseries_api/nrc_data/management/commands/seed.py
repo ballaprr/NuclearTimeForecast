@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.db import models
-from nrc_data.models import ReactorStatus
+from nrc_data.models import ReactorStatus, Reactor
 from django.utils import timezone
 from datetime import datetime, timedelta
 import pandas as pd
@@ -452,6 +452,9 @@ class Command(BaseCommand):
                     reason = row['Reason'] if pd.notna(row['Reason']) else None
                     changed = bool(pd.notna(row['Change']) and '*' in str(row['Change']))
                     scrams = int(row['Scrams']) if pd.notna(row['Scrams']) and str(row['Scrams']).isdigit() else None
+
+                    # Get or create reactor
+                    reactor, created = Reactor.objects.get_or_create(name=normalized_unit)
                     
                     reactor_status, created = ReactorStatus.objects.get_or_create(
                         report_date=report_date,
@@ -462,7 +465,7 @@ class Command(BaseCommand):
                             'reason': reason,
                             'changed': changed,
                             'scrams': scrams,
-                            'region': region
+                            'reactor_id': reactor.id,
                         }
                     )
                     

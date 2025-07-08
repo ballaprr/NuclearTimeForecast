@@ -4,12 +4,14 @@ from datetime import timedelta
 from django.db.models import Max
 from nrc_data.models import ReactorStatus
 from django.core.management import call_command
+import logging
 
+logger = logging.getLogger(__name__)
 
 @shared_task
 def fetch_latest_nrc_data():
     latest = ReactorStatus.objects.aggregate(Max('report_date'))['report_date__max']
-
+    logger.info(f"Latest date: {latest}")
     if not latest:
         print("No data found.")
         return
