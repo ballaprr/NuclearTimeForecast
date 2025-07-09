@@ -103,4 +103,5 @@ def generate_and_upload_forecast(unit_name):
     # Step 8: Return public URL
     url = f"https://{bucket}.s3.amazonaws.com/{s3_path}"
     ReactorForecast.objects.filter(reactor=reactor_obj, df__in=[next_day, day30]).update(image_url=url)
+    detect_stub_outages_for_reactor(reactor_name)
     return url
