@@ -6,6 +6,9 @@ import boto3
 from io import BytesIO
 from datetime import timedelta
 from prophet import Prophet
+from nrc_data.models import Reactor, ReactorStatus, ReactorForecast
+import pandas as pd
+
 
 # Django setup (optional if already configured)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nucleartimeseries_api.settings")
@@ -20,12 +23,11 @@ AWS_REGION = "us-east-1"  # Change as needed
 
 def generate_and_upload_forecast(unit_name):
     # Step 1: Load data
-    qs = ReactorStatus.objects.filter(unit__icontains=unit_name).order_by("report_date")
-    if not qs.exists():
-        print(f"No data found for unit: {unit_name}")
-        return None
-
-    df = pd.DataFrame(qs.values("report_date", "power"))
+    qs = ReactorStatus.objects.filter(unit=reactor_name).order_by('report_date')
+    df = pd.DataFrame(list(qs.values("report_date", "power")))
+    if df.empty:
+        raise ValueError(f"No data found for {reactor_name}")
+    
     df_prophet = df.rename(columns={"report_date": "ds", "power": "y"})
 
     # Step 2: Identify refueling outages (y == 0)
@@ -51,7 +53,26 @@ def generate_and_upload_forecast(unit_name):
     # Step 4: Forecast
     future = model.make_future_dataframe(periods=30)
     forecast = model.predict(future)
-    latest_date = df_prophet["ds"].max()
+    latest_date = pd.to_datetime(df_prophet['ds'].max())
+    next_day = latest_date + timedelta(days=1)
+    day30 = latest_date + timedelta(days=30)
+
+    for day in [next_day, day30]:
+        row = forecast[forecast['ds'] == day]
+        if row.empty:
+            continue
+
+        # Upload forecast row to DB
+        reactor_obj = Reactor.objects.get(name=reactor_name)
+        ReactorForecast.objects.update_or_create(
+            reactor=reactor_obj,
+            df=day,
+            defaults={
+                'yhat': row['yhat'].values[0],
+                'yhat_lower': row['yhat_lower'].values[0],
+                'yhat_upper': row['yhat_upper'].values[0],
+            }
+        )
     forecast_30 = forecast[forecast["ds"] > latest_date]
 
     # Step 5: Plot actual vs forecast
@@ -74,11 +95,12 @@ def generate_and_upload_forecast(unit_name):
     html_buffer.seek(0)
 
     # Step 7: Upload to S3
-    s3 = boto3.client("s3", region_name=AWS_REGION)
-    filename = f"{S3_FORECAST_FOLDER}{unit_name.replace(' ', '_')}_forecast.html"
-    s3.upload_fileobj(html_buffer, S3_BUCKET_NAME, filename, ExtraArgs={'ContentType': 'text/html'})
+    s3 = boto3.client('s3')
+    bucket = settings.AWS_STORAGE_BUCKET_NAME
+    s3_path = f"forecasts/{reactor_name.replace(' ', '_')}.html"
+    s3.upload_fileobj(html_buffer, bucket, s3_path, ExtraArgs={'ContentType': 'text/html'})
 
     # Step 8: Return public URL
-    url = f"https://{S3_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{filename}"
-    print(f"Forecast uploaded to: {url}")
+    url = f"https://{bucket}.s3.amazonaws.com/{s3_path}"
+    ReactorForecast.objects.filter(reactor=reactor_obj, df__in=[next_day, day30]).update(image_url=url)
     return url
