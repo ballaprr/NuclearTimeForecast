@@ -55,6 +55,7 @@ class ReactorForecast(models.Model):
     yhat = models.FloatField() # Predicted power
     yhat_lower = models.FloatField()
     yhat_upper = models.FloatField()
+    image_url = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
