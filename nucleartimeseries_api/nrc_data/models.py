@@ -51,7 +51,7 @@ class StubOutage(models.Model):
 
 class ReactorForecast(models.Model):
     reactor = models.ForeignKey('Reactor', on_delete=models.CASCADE, null=True, blank=True)
-    df = models.TextField() # Forecast date
+    df = models.DateField() # Forecast date
     yhat = models.FloatField() # Predicted power
     yhat_lower = models.FloatField()
     yhat_upper = models.FloatField()

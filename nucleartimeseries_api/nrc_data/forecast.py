@@ -1,21 +1,18 @@
 import os
-import django
 import pandas as pd
 import plotly.graph_objects as go
 import boto3
 from io import BytesIO, StringIO
 from datetime import timedelta
 from prophet import Prophet
-from nrc_data.models import Reactor, ReactorStatus, ReactorForecast
-import pandas as pd
 from nrc_data.outage_detection import detect_stub_outages_for_reactor
+import django
 from django.conf import settings
 
-# Django setup (optional if already configured)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nucleartimeseries_api.settings")
 django.setup()
 
-from nrc_data.models import ReactorStatus
+from nrc_data.models import Reactor, ReactorStatus, ReactorForecast
 
 def generate_and_upload_forecast(unit_name):
     # Step 1: Load data
@@ -53,26 +50,20 @@ def generate_and_upload_forecast(unit_name):
     next_day = latest_date + timedelta(days=1)
     day30 = latest_date + timedelta(days=30)
 
-    try:
-        reactor_obj = Reactor.objects.get(name=unit_name)
-    except Reactor.DoesNotExist:
-        raise ValueError(f"Reactor with name '{unit_name}' not found")
-
+    reactor_obj = Reactor.objects.get(name=unit_name)
     for day in [next_day, day30]:
         row = forecast[forecast['ds'] == day]
-        if row.empty:
-            continue
-
-        # Upload forecast row to DB
-        ReactorForecast.objects.update_or_create(
-            reactor=reactor_obj,
-            df=day,
-            defaults={
-                'yhat': row['yhat'].values[0],
-                'yhat_lower': row['yhat_lower'].values[0],
-                'yhat_upper': row['yhat_upper'].values[0],
-            }
-        )
+        if not row.empty:
+            # Upload forecast row to DB
+            ReactorForecast.objects.update_or_create(
+                reactor=reactor_obj,
+                df=day,
+                defaults={
+                    'yhat': row['yhat'].values[0],
+                    'yhat_lower': row['yhat_lower'].values[0],
+                    'yhat_upper': row['yhat_upper'].values[0],
+                }
+            )
     forecast_30 = forecast[forecast["ds"] > latest_date]
 
     # Step 5: Plot actual vs forecast

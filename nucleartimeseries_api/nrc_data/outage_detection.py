@@ -1,5 +1,5 @@
 from datetime import timedelta
-from nrc_data.models import ReactorStatus, ReactorForecast, StubOutage
+from nrc_data.models import ReactorStatus, ReactorForecast, StubOutage, Reactor
 
 
 def detect_stub_outages_for_reactor(reactor_name, threshold_drops=15):
