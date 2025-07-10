@@ -9,6 +9,7 @@ from prophet import Prophet
 from nrc_data.models import Reactor, ReactorStatus, ReactorForecast
 import pandas as pd
 from nrc_data.outage_detection import detect_stub_outages_for_reactor
+from django.conf import settings
 
 # Django setup (optional if already configured)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nucleartimeseries_api.settings")
@@ -23,10 +24,10 @@ AWS_REGION = "us-east-1"  # Change as needed
 
 def generate_and_upload_forecast(unit_name):
     # Step 1: Load data
-    qs = ReactorStatus.objects.filter(unit=reactor_name).order_by('report_date')
+    qs = ReactorStatus.objects.filter(unit=unit_name).order_by('report_date')
     df = pd.DataFrame(list(qs.values("report_date", "power")))
     if df.empty:
-        raise ValueError(f"No data found for {reactor_name}")
+        raise ValueError(f"No data found for {unit_name}")
     
     df_prophet = df.rename(columns={"report_date": "ds", "power": "y"})
 
@@ -57,13 +58,17 @@ def generate_and_upload_forecast(unit_name):
     next_day = latest_date + timedelta(days=1)
     day30 = latest_date + timedelta(days=30)
 
+    try:
+        reactor_obj = Reactor.objects.get(name=unit_name)
+    except Reactor.DoesNotExist:
+        raise ValueError(f"Reactor with name '{unit_name}' not found")
+
     for day in [next_day, day30]:
         row = forecast[forecast['ds'] == day]
         if row.empty:
             continue
 
         # Upload forecast row to DB
-        reactor_obj = Reactor.objects.get(name=reactor_name)
         ReactorForecast.objects.update_or_create(
             reactor=reactor_obj,
             df=day,
@@ -97,11 +102,11 @@ def generate_and_upload_forecast(unit_name):
     # Step 7: Upload to S3
     s3 = boto3.client('s3')
     bucket = settings.AWS_STORAGE_BUCKET_NAME
-    s3_path = f"forecasts/{reactor_name.replace(' ', '_')}.html"
+    s3_path = f"{S3_FORECAST_FOLDER}{unit_name.replace(' ', '_')}.html"
     s3.upload_fileobj(html_buffer, bucket, s3_path, ExtraArgs={'ContentType': 'text/html'})
 
     # Step 8: Return public URL
     url = f"https://{bucket}.s3.amazonaws.com/{s3_path}"
     ReactorForecast.objects.filter(reactor=reactor_obj, df__in=[next_day, day30]).update(image_url=url)
-    detect_stub_outages_for_reactor(reactor_name)
+    detect_stub_outages_for_reactor(reactor_obj)
     return url
