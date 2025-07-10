@@ -2,7 +2,7 @@ from datetime import timedelta
 from nrc_data.models import ReactorStatus, ReactorForecast, StubOutage
 
 
-def detect_sub_outages_for_reactor(reactor_name, threshold_drops=15):
+def detect_stub_outages_for_reactor(reactor_name, threshold_drops=15):
     try:
         reactor = Reactor.objects.get(name=reactor_name)
     except Reactor.DoesNotExist:

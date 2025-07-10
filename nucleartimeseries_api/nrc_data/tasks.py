@@ -4,8 +4,10 @@ from datetime import timedelta
 from django.db.models import Max
 from nrc_data.models import ReactorStatus
 from django.core.management import call_command
-from forecast import generate_and_upload_forecast
+from nrc_data.forecast import generate_and_upload_forecast
 import logging
+import django
+import os
 
 logger = logging.getLogger(__name__)
 
