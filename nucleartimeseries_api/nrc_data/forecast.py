@@ -17,7 +17,12 @@ from nrc_data.models import Reactor, ReactorStatus, ReactorForecast
 def generate_and_upload_forecast(unit_name):
     # Step 1: Load data
     qs = ReactorStatus.objects.filter(unit=unit_name).order_by('report_date')
+    latest_status = qs.last()
     df = pd.DataFrame(list(qs.values("report_date", "power")))
+    print("qs")
+    print(qs)
+    print("df")
+    print(df)
     if df.empty:
         raise ValueError(f"No data found for {unit_name}")
     
@@ -62,7 +67,8 @@ def generate_and_upload_forecast(unit_name):
                     'yhat': row['yhat'].values[0],
                     'yhat_lower': row['yhat_lower'].values[0],
                     'yhat_upper': row['yhat_upper'].values[0],
-                }
+                },
+                reactorstatus = latest_status
             )
     forecast_30 = forecast[forecast["ds"] > latest_date]
 
@@ -99,5 +105,5 @@ def generate_and_upload_forecast(unit_name):
     # Step 8: Return public URL
     url = f"https://{bucket}.s3.amazonaws.com/{s3_path}"
     ReactorForecast.objects.filter(reactor=reactor_obj, df__in=[next_day, day30]).update(image_url=url)
-    detect_stub_outages_for_reactor(reactor_obj)
+    detect_stub_outages_for_reactor(reactor_obj.name)
     return url

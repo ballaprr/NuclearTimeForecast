@@ -56,6 +56,7 @@ class ReactorForecast(models.Model):
     yhat_lower = models.FloatField()
     yhat_upper = models.FloatField()
     image_url = models.URLField(blank=True, null=True)
+    reactorstatus = models.ForeignKey('ReactorStatus', on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
