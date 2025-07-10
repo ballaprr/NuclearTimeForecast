@@ -3,7 +3,7 @@ import django
 import pandas as pd
 import plotly.graph_objects as go
 import boto3
-from io import BytesIO
+from io import BytesIO, StringIO
 from datetime import timedelta
 from prophet import Prophet
 from nrc_data.models import Reactor, ReactorStatus, ReactorForecast
@@ -16,11 +16,6 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nucleartimeseries_api.settings"
 django.setup()
 
 from nrc_data.models import ReactorStatus
-
-# AWS S3 config (update these)
-S3_BUCKET_NAME = "nuclearforecast"
-S3_FORECAST_FOLDER = "forecasts/"
-AWS_REGION = "us-east-1"  # Change as needed
 
 def generate_and_upload_forecast(unit_name):
     # Step 1: Load data
@@ -95,15 +90,20 @@ def generate_and_upload_forecast(unit_name):
     )
 
     # Step 6: Save to HTML in memory
-    html_buffer = BytesIO()
+    html_buffer = StringIO()
     fig.write_html(html_buffer)
-    html_buffer.seek(0)
+    html_str = html_buffer.getvalue().encode("utf-8")  # Convert str to bytes
+    html_bytes = BytesIO(html_str)
 
     # Step 7: Upload to S3
-    s3 = boto3.client('s3')
+    s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
     bucket = settings.AWS_STORAGE_BUCKET_NAME
-    s3_path = f"{S3_FORECAST_FOLDER}{unit_name.replace(' ', '_')}.html"
-    s3.upload_fileobj(html_buffer, bucket, s3_path, ExtraArgs={'ContentType': 'text/html'})
+    s3_path = f"{settings.S3_FORECAST_FOLDER}{unit_name.replace(' ', '_')}.html"
+    try:
+        s3.upload_fileobj(html_bytes, bucket, s3_path, ExtraArgs={'ContentType': 'text/html'})
+    except Exception as e:
+        print(f"❌ Failed to upload to S3 for {unit_name}: {e}")
+        return
 
     # Step 8: Return public URL
     url = f"https://{bucket}.s3.amazonaws.com/{s3_path}"
