@@ -46,6 +46,7 @@ class StubOutage(models.Model):
     description = models.TextField(blank=True)
     auto_detected = models.BooleanField(default=False)
     confirmed = models.BooleanField(default=False)
+    reactorstatus = models.ForeignKey('ReactorStatus', on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 

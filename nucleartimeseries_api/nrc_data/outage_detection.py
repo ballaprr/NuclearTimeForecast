@@ -38,5 +38,6 @@ def detect_stub_outages_for_reactor(reactor_name, threshold_drops=5):
                 'description': f"Detected {drop:.1f}% drop vs forecast ({predicted:.1f} → {actual:.1f})",
                 'auto_detected': True,
                 'confirmed': False,
-            }
+            },
+            reactorstatus=latest_actual
         )
