@@ -36,6 +36,15 @@ class ReactorForecastSerializer(serializers.ModelSerializer):
 class ReactorDetailSerializer(serializers.ModelSerializer):
     reactorforecast_set = ReactorForecastSerializer(many=True)
     stuboutage_set = StubOutageSerializer(many=True)
+    stuboutage = serializers.SerializerMethodField()
+    
     class Meta:
         model = ReactorStatus
-        fields = ['report_date', 'unit', 'power', 'reactorforecast_set', 'stuboutage_set']
+        fields = ['report_date', 'unit', 'power', 'reactorforecast_set', 'stuboutage_set', 'stuboutage']
+
+    def get_stuboutage(self, obj):
+        # return True if any stuboutage is confirmed 
+        # if there is data in stuboutage_set else stuboutage is False
+        if obj.stuboutage_set.exists():
+            return True
+        return False
