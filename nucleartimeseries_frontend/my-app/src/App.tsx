@@ -6,22 +6,12 @@ function App() {
   const [selectedDate, setSelectedDate] = useState('2025-01-10')
 
   return (
-    <div style={{ padding: '1rem' }}>
-      <header style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <h1>Nuclear Reactor Time Series Dashboard</h1>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="date-picker" style={{ marginRight: '0.5rem' }}>
-            Select Date:
-          </label>
-          <input
-            id="date-picker"
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            style={{ padding: '0.5rem', fontSize: '1rem' }}
-          />
-        </div>
-      </header>
+    <div style={{ 
+      padding: '1rem', 
+      minHeight: '100vh', 
+      backgroundColor: 'rgb(30, 35, 45)',
+      color: 'rgba(255, 255, 255, 0.95)'
+    }}>
       
       <main>
         <ReactorMap date={selectedDate} />

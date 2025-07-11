@@ -42,15 +42,36 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
   }, [date]);
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '2rem' }}>Loading reactor data...</div>;
+    return <div style={{ 
+      textAlign: 'center', 
+      padding: '2rem',
+      color: 'rgba(255, 255, 255, 0.90)',
+      backgroundColor: 'rgb(35, 40, 50)',
+      borderRadius: '8px',
+      border: '1px solid rgba(255, 255, 255, 0.1)'
+    }}>Loading reactor data...</div>;
   }
 
   if (error) {
-    return <div style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>Error: {error}</div>;
+    return <div style={{ 
+      textAlign: 'center', 
+      padding: '2rem', 
+      color: '#ff6b6b',
+      backgroundColor: 'rgb(35, 40, 50)',
+      borderRadius: '8px',
+      border: '1px solid rgba(255, 107, 107, 0.2)'
+    }}>Error: {error}</div>;
   }
 
   if (reactors.length === 0) {
-    return <div style={{ textAlign: 'center', padding: '2rem' }}>No reactor data found for {date}</div>;
+    return <div style={{ 
+      textAlign: 'center', 
+      padding: '2rem',
+      color: 'rgba(255, 255, 255, 0.90)',
+      backgroundColor: 'rgb(35, 40, 50)',
+      borderRadius: '8px',
+      border: '1px solid rgba(255, 255, 255, 0.1)'
+    }}>No reactor data found for {date}</div>;
   }
 
   // Extract reactor data with power levels
@@ -65,16 +86,29 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
     }))
   );
 
+  // Color reactors based on power level
+  const getMarkerColor = (power: number) => {
+    if (power === 0) return '#ef4444'; // Red for offline
+    if (power < 25) return '#f97316'; // Orange for low power
+    if (power < 75) return '#eab308'; // Yellow for medium power
+    return '#22c55e'; // Green for full power
+  };
+
   return (
-    <div>
-      <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>
+    <div style={{ 
+      backgroundColor: 'rgb(35, 40, 50)',
+      padding: '1.5rem',
+      borderRadius: '8px',
+      border: '1px solid rgba(255, 255, 255, 0.1)'
+    }}>
+      <h2 style={{ 
+        textAlign: 'center', 
+        marginBottom: '1rem',
+        color: 'rgba(255, 255, 255, 0.95)',
+        fontSize: '1.8rem'
+      }}>
         US Nuclear Reactor Status - {date}
       </h2>
-      <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
-        <strong>Total Reactors:</strong> {reactorData.length} | 
-        <strong> Online:</strong> {reactorData.filter(r => r.power > 0).length} | 
-        <strong> Offline:</strong> {reactorData.filter(r => r.power === 0).length}
-      </div>
       <Plot
         data={[
           {
@@ -86,24 +120,15 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
             text: reactorData.map(
               (r) => `${r.unit}<br>Power: ${r.power}%<br>Region: ${r.region}<br>Plant: ${r.name}`
             ),
+            hoverinfo: "text",
             marker: {
-              size: reactorData.map((r) => r.power === 0 ? 8 : 12),
-              color: reactorData.map((r) => r.power),
-              colorscale: [
-                [0, "red"],      // Offline reactors in red
-                [0.1, "orange"], // Low power in orange  
-                [0.5, "yellow"], // Medium power in yellow
-                [1, "green"]     // Full power in green
-              ],
-                             colorbar: { 
-                 title: { text: "Power (%)" }
-               },
+              color: reactorData.map(r => getMarkerColor(r.power)),
+              size: 8,
               line: {
-                color: "black",
+                color: 'rgba(255, 255, 255, 0.3)',
                 width: 1
               }
-            },
-            hoverinfo: "text",
+            }
           },
         ]}
         layout={{
@@ -111,17 +136,25 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
             scope: "usa",
             projection: { type: "albers usa" },
             showland: true,
-            landcolor: "rgb(243, 243, 243)",
-            coastlinecolor: "rgb(204, 204, 204)",
-            subunitcolor: "rgb(217, 217, 217)",
+            landcolor: "rgb(15, 20, 25)",
+            coastlinecolor: "rgb(25, 30, 35)",
+            subunitcolor: "rgb(30, 35, 40)",
             subunitwidth: 1,
             countrywidth: 1,
+            bgcolor: "rgb(8, 12, 18)",
+            showlakes: true,
+            lakecolor: "rgb(12, 16, 22)"
           },
           title: {
             text: `Nuclear Reactor Power Output Map`,
             x: 0.5,
-            font: { size: 16 }
+            font: { 
+              size: 16, 
+              color: 'rgba(255, 255, 255, 0.95)' 
+            }
           },
+          paper_bgcolor: "rgb(35, 40, 50)",
+          plot_bgcolor: "rgb(35, 40, 50)",
           margin: { t: 60, b: 20, l: 20, r: 20 },
         }}
         onClick={(event: any) => {
@@ -134,6 +167,18 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
           }
         }}
         style={{ width: "100%", height: "80vh" }}
+        config={{
+          displayModeBar: true,
+          modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+          displaylogo: false,
+          toImageButtonOptions: {
+            format: 'png',
+            filename: 'nuclear_reactor_map',
+            height: 500,
+            width: 700,
+            scale: 1
+          }
+        }}
       />
     </div>
   );
