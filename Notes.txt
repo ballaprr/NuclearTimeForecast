@@ -111,3 +111,59 @@ date = '20250627'
 'https://www.nrc.gov/reading-rm/doc-collections/event-status/reactor-status/' + {year} + '/' + {date} + 'ps.html'
 
 
+
+Hi Michael, 
+   I heard back a couple weeks ago, they've decided not to move forward this round. Disappointing, but I'm still looking to work on something combine my software skills with the nuclear industry. 
+   I'm currently working on a Django tool that pulls NRC daily "Power Reactor Status" into a Prophet model to project the power output for each unit, flag anomalies, and generate a stub outage for any unit with an alert. I've just went through the website and scraped the NRC data and am looking to populate TimeScaleDB (an extension of Postgres). Is this an application that you think the nuclear industry would find useful? Are there any other projects that you being in the nuclear industry would find useful?
+   
+   
+   
+  
+Models:
+
+Reactor (name, region, latitude, longitude)
+
+ReactorStatus (reactor foreign key, report_date, power, reason, changed, scrams, status)
+
+
+StubOutage (reactor foreign key, date_detected, description, auto_detected, confirmed, created_at)
+
+ReactorForecast (reactor, ds, yhat, yhat_lower, yhat_upper, created_at)
+   
+  
+
+Pull latest NRC data -> Update Reactor Status -> Runs Prophet Model per reactor -> Compare prediction vs actual power
+
+-> Updates status field (normal/anomalous/stub_outage) -> if sub outage, create StubOutage object
+
+
+- Compare predicted (what we predict for today) vs actual (after we fetch from nrc)
+
+After Actuals are saved for each reactor, fetch today's forecast from ReactorForecast, Fetch today's actual from ReactorStatus
+
+
+
+
+
+main page:
+
+/reactors
+Reactor:
+- Latest date from ReactorStatus
+- Reactor
+
+
+
+/reactors/<reactor_id:int>/
+
+- Actual power (ReactorStatus)
+- StubOutage (if not then Normal)
+- image_url (ReactorForecast)
+   
+   
+   
+  
+  
+  
+  
+ 
