@@ -23,7 +23,7 @@ class Reactor(models.Model):
 
 # unit (foreign key to React Name)
 class ReactorStatus(models.Model):
-    reactor = models.ForeignKey('Reactor', on_delete=models.CASCADE, null=True, blank=True)
+    reactor = models.ForeignKey('Reactor', related_name='reactorstatus', on_delete=models.CASCADE, null=True, blank=True)
     report_date = models.DateField()
     unit = models.CharField(max_length=30)
     power = models.IntegerField()
