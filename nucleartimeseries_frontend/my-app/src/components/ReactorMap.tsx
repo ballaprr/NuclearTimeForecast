@@ -7,6 +7,7 @@ interface ReactorStatus {
   report_date: string;
   unit: string;
   power: number;
+  reactor: number;
 }
 
 interface Reactor {
@@ -17,6 +18,23 @@ interface Reactor {
   reactorstatus: ReactorStatus[];
 }
 
+interface ReactorForecast {
+  df: string;
+  yhat: number;
+  yhat_lower: number;
+  yhat_upper: number;
+  image_url: string;
+}
+
+interface ReactorDetail {
+  report_date: string;
+  unit: string;
+  power: number;
+  reactorforecast_set: ReactorForecast[];
+  stuboutage_set: any[];
+  stuboutage: boolean;
+}
+
 interface ReactorMapProps {
   date?: string;
 }
@@ -25,6 +43,9 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
   const [reactors, setReactors] = useState<Reactor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedReactor, setSelectedReactor] = useState<ReactorDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -111,6 +132,137 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
     }));
   });
 
+  const fetchReactorDetail = async (reactorId: number) => {
+    setDetailLoading(true);
+    try {
+      const response = await axios.get(`http://localhost:8000/api/reactor/${date}/${reactorId}/`);
+      setSelectedReactor(response.data);
+      setShowModal(true);
+    } catch (error) {
+      console.error('Failed to fetch reactor details:', error);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const ReactorDetailModal = () => {
+    if (!showModal || !selectedReactor) return null;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000
+      }}>
+        <div style={{
+          backgroundColor: 'rgb(35, 40, 50)',
+          padding: '2rem',
+          borderRadius: '12px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          maxWidth: '600px',
+          width: '90%',
+          maxHeight: '80vh',
+          overflowY: 'auto',
+          color: 'white'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h2 style={{ margin: 0, color: 'rgba(255, 255, 255, 0.95)' }}>
+              {selectedReactor.unit}
+            </h2>
+            <button
+              onClick={() => setShowModal(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                padding: '0.5rem'
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ color: 'rgba(255, 255, 255, 0.9)', marginBottom: '0.5rem' }}>Current Status</h3>
+            <p style={{ margin: '0.25rem 0', color: 'rgba(255, 255, 255, 0.8)' }}>
+              <strong>Power:</strong> {selectedReactor.power}%
+            </p>
+            <p style={{ margin: '0.25rem 0', color: 'rgba(255, 255, 255, 0.8)' }}>
+              <strong>Report Date:</strong> {selectedReactor.report_date}
+            </p>
+            <p style={{ margin: '0.25rem 0', color: 'rgba(255, 255, 255, 0.8)' }}>
+              <strong>Stub Outage:</strong> {selectedReactor.stuboutage ? 'Yes' : 'No'}
+            </p>
+          </div>
+
+          {selectedReactor.reactorforecast_set.length > 0 && (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h3 style={{ color: 'rgba(255, 255, 255, 0.9)', marginBottom: '0.5rem' }}>Forecast Data</h3>
+              {selectedReactor.reactorforecast_set.map((forecast, index) => (
+                <div key={index} style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  marginBottom: '0.5rem'
+                }}>
+                  <p style={{ margin: '0.25rem 0', color: 'rgba(255, 255, 255, 0.8)' }}>
+                    <strong>Date:</strong> {forecast.df}
+                  </p>
+                  <p style={{ margin: '0.25rem 0', color: 'rgba(255, 255, 255, 0.8)' }}>
+                    <strong>Predicted Power:</strong> {forecast.yhat.toFixed(1)}%
+                  </p>
+                  <p style={{ margin: '0.25rem 0', color: 'rgba(255, 255, 255, 0.8)' }}>
+                    <strong>Range:</strong> {forecast.yhat_lower.toFixed(1)}% - {forecast.yhat_upper.toFixed(1)}%
+                  </p>
+                  <a 
+                    href={forecast.image_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{
+                      color: '#7dd3fc',
+                      textDecoration: 'none',
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    View Forecast Chart →
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {selectedReactor.stuboutage_set.length > 0 && (
+            <div>
+              <h3 style={{ color: 'rgba(255, 255, 255, 0.9)', marginBottom: '0.5rem' }}>Stub Outages</h3>
+              {selectedReactor.stuboutage_set.map((outage, index) => (
+                <div key={index} style={{
+                  backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  marginBottom: '0.5rem',
+                  border: '1px solid rgba(255, 107, 107, 0.2)'
+                }}>
+                  <p style={{ margin: '0.25rem 0', color: 'rgba(255, 255, 255, 0.8)' }}>
+                    {JSON.stringify(outage)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div style={{ 
       backgroundColor: 'rgb(35, 40, 50)',
@@ -184,9 +336,10 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
           const pointIndex = event.points?.[0]?.pointIndex;
           if (pointIndex !== undefined && reactorData[pointIndex]) {
             const reactor = reactorData[pointIndex];
-            console.log(`Clicked on ${reactor.unit} at ${reactor.name}`);
-            // You can implement navigation to detailed view here
-            // window.location.href = `/reactor/${reactor.name.replace(/ /g, "_")}`;
+            const reactorId = reactors.find(r => r.name === reactor.name)?.reactorstatus.find(s => s.unit === reactor.unit)?.reactor;
+            if (reactorId) {
+              fetchReactorDetail(reactorId);
+            }
           }
         }}
         style={{ width: "100%", height: "80vh" }}
@@ -203,6 +356,32 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
           }
         }}
       />
+      <ReactorDetailModal />
+      
+      {detailLoading && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 999
+        }}>
+          <div style={{
+            backgroundColor: 'rgb(35, 40, 50)',
+            padding: '2rem',
+            borderRadius: '8px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            color: 'white'
+          }}>
+            Loading reactor details...
+          </div>
+        </div>
+      )}
     </div>
   );
 }
