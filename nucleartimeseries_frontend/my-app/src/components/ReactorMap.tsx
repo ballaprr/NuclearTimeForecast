@@ -39,7 +39,7 @@ interface ReactorMapProps {
   date?: string;
 }
 
-export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
+export default function ReactorMap({ date = "2025-07-11" }: ReactorMapProps) {
   const [reactors, setReactors] = useState<Reactor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -166,9 +166,9 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
           padding: '2rem',
           borderRadius: '12px',
           border: '1px solid rgba(255, 255, 255, 0.1)',
-          maxWidth: '600px',
-          width: '90%',
-          maxHeight: '80vh',
+          maxWidth: '900px',
+          width: '95%',
+          maxHeight: '90vh',
           overflowY: 'auto',
           color: 'white'
         }}>
@@ -223,20 +223,68 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
                   <p style={{ margin: '0.25rem 0', color: 'rgba(255, 255, 255, 0.8)' }}>
                     <strong>Range:</strong> {forecast.yhat_lower.toFixed(1)}% - {forecast.yhat_upper.toFixed(1)}%
                   </p>
-                  <a 
-                    href={forecast.image_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
+                </div>
+              ))}
+              
+              {/* Display forecast chart */}
+              <div style={{ marginTop: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <h4 style={{ color: 'rgba(255, 255, 255, 0.9)', margin: 0 }}>Interactive Forecast Chart</h4>
+                  <button
+                    onClick={() => window.open(selectedReactor.reactorforecast_set[0].image_url, '_blank')}
                     style={{
+                      backgroundColor: 'rgba(125, 211, 252, 0.1)',
+                      border: '1px solid rgba(125, 211, 252, 0.3)',
                       color: '#7dd3fc',
-                      textDecoration: 'none',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
                       fontSize: '0.9rem'
                     }}
                   >
-                    View Forecast Chart →
-                  </a>
+                    View Full Chart
+                  </button>
                 </div>
-              ))}
+                
+                {/* Embedded forecast chart */}
+                <div style={{
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  marginBottom: '1rem'
+                }}>
+                  <iframe
+                    src={selectedReactor.reactorforecast_set[0].image_url}
+                    style={{
+                      width: '100%',
+                      height: '500px',
+                      border: 'none',
+                      backgroundColor: 'white'
+                    }}
+                    title="Reactor Forecast Chart"
+                    onLoad={() => console.log('Chart loaded successfully')}
+                    onError={(e) => console.error('Failed to load chart:', e)}
+                  />
+                </div>
+                
+                {/* Debug info */}
+                <details style={{ marginTop: '1rem' }}>
+                  <summary style={{ color: 'rgba(255, 255, 255, 0.6)', cursor: 'pointer', fontSize: '0.9rem' }}>
+                    Debug Info
+                  </summary>
+                  <div style={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                    padding: '1rem', 
+                    borderRadius: '6px', 
+                    marginTop: '0.5rem',
+                    fontSize: '0.8rem',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    wordBreak: 'break-all'
+                  }}>
+                    <p><strong>Chart URL:</strong> {selectedReactor.reactorforecast_set[0].image_url}</p>
+                  </div>
+                </details>
+              </div>
             </div>
           )}
 

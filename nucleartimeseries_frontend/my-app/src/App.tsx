@@ -3,7 +3,7 @@ import ReactorMap from './components/ReactorMap'
 import './App.css'
 
 function App() {
-  const [selectedDate, setSelectedDate] = useState('2025-01-10')
+  const [selectedDate, setSelectedDate] = useState('2025-07-11')
 
   return (
     <div style={{ 
