@@ -75,7 +75,7 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
   }
 
   // Extract reactor data with power levels
-  const reactorData = reactors.flatMap(reactor => 
+  const rawReactorData = reactors.flatMap(reactor => 
     reactor.reactorstatus.map(status => ({
       name: reactor.name,
       latitude: reactor.latitude,
@@ -86,13 +86,30 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
     }))
   );
 
-  // Color reactors based on power level
-  const getMarkerColor = (power: number) => {
-    if (power === 0) return '#ef4444'; // Red for offline
-    if (power < 25) return '#f97316'; // Orange for low power
-    if (power < 75) return '#eab308'; // Yellow for medium power
-    return '#22c55e'; // Green for full power
-  };
+  // Group reactors by location and apply offset pattern
+  const locationGroups = new Map();
+  rawReactorData.forEach(reactor => {
+    const key = `${reactor.latitude},${reactor.longitude}`;
+    if (!locationGroups.has(key)) {
+      locationGroups.set(key, []);
+    }
+    locationGroups.get(key).push(reactor);
+  });
+
+  const reactorData = Array.from(locationGroups.values()).flatMap(group => {
+    if (group.length === 1) {
+      return group;
+    }
+    // Apply offset pattern for multiple units
+    const offsetDistance = 0.02;
+    const patterns = [[0, 0], [offsetDistance, 0], [0, offsetDistance], [-offsetDistance, 0], [0, -offsetDistance]];
+    
+    return group.map((reactor: any, index: number) => ({
+      ...reactor,
+      latitude: reactor.latitude + (patterns[index] || [0, 0])[1],
+      longitude: reactor.longitude + (patterns[index] || [0, 0])[0]
+    }));
+  });
 
   return (
     <div style={{ 
@@ -117,18 +134,24 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
             locationmode: "USA-states",
             lon: reactorData.map((r) => r.longitude),
             lat: reactorData.map((r) => r.latitude),
-            text: reactorData.map(
-              (r) => `${r.unit}<br>Power: ${r.power}%<br>Region: ${r.region}<br>Plant: ${r.name}`
+            text: reactorData.map(r => 
+              `${r.unit}<br/>Power: ${r.power}%<br/>Region: ${r.region}<br/>Plant: ${r.name}`
             ),
             hoverinfo: "text",
-            marker: {
-              color: reactorData.map(r => getMarkerColor(r.power)),
-              size: 8,
-              line: {
-                color: 'rgba(255, 255, 255, 0.3)',
-                width: 1
+                          marker: {
+                size: 8,
+                color: reactorData.map(r => r.power),
+                colorscale: [
+                  [0, "red"],      // Offline reactors in red
+                  [0.1, "orange"], // Low power in orange  
+                  [0.5, "yellow"], // Medium power in yellow
+                  [1, "green"]     // Full power in green
+                ],
+                line: {
+                  color: 'white',
+                  width: 1
+                }
               }
-            }
           },
         ]}
         layout={{
@@ -136,14 +159,14 @@ export default function ReactorMap({ date = "2025-01-10" }: ReactorMapProps) {
             scope: "usa",
             projection: { type: "albers usa" },
             showland: true,
-            landcolor: "rgb(15, 20, 25)",
-            coastlinecolor: "rgb(25, 30, 35)",
-            subunitcolor: "rgb(30, 35, 40)",
+            landcolor: "rgb(35, 45, 55)",
+            coastlinecolor: "rgb(50, 60, 70)",
+            subunitcolor: "rgb(60, 70, 80)",
             subunitwidth: 1,
             countrywidth: 1,
-            bgcolor: "rgb(8, 12, 18)",
+            bgcolor: "rgb(25, 30, 40)",
             showlakes: true,
-            lakecolor: "rgb(12, 16, 22)"
+            lakecolor: "rgb(30, 40, 50)"
           },
           title: {
             text: `Nuclear Reactor Power Output Map`,

@@ -147,7 +147,7 @@ After Actuals are saved for each reactor, fetch today's forecast from ReactorFor
 
 main page:
 
-/reactors
+/reactors/<date_id:date>
 Reactor:
 - Latest date from ReactorStatus
 - Reactor
@@ -160,6 +160,19 @@ Reactor:
 - StubOutage (if not then Normal)
 - image_url (ReactorForecast)
    
+   
+To do: 
+	- Darken the map
+	- Take away the power bar on the right
+	- Remove Online & Offline
+	- Plot reactors on map
+	- Hover on to see name
+	- Click on button and see details returned from specific api
+	- Resize and reorient front end
+	- Rename urls when saving to s3, to get dates correct
+	- Look into stuboutage again
+	- Work on api so we can colorcode Normal vs StubOutage
+	- Reload data in database
    
    
   
