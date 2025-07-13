@@ -95,7 +95,8 @@ def generate_and_upload_forecast(unit_name):
     # Step 7: Upload to S3
     s3 = boto3.client('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
     bucket = settings.AWS_STORAGE_BUCKET_NAME
-    s3_path = f"{settings.S3_FORECAST_FOLDER}{unit_name.replace(' ', '_')}.html"
+    date_str = latest_date.strftime('%Y-%m-%d')
+    s3_path = f"{settings.S3_FORECAST_FOLDER}{unit_name.replace(' ', '_')}_{date_str}.html"
     try:
         s3.upload_fileobj(html_bytes, bucket, s3_path, ExtraArgs={'ContentType': 'text/html'})
     except Exception as e:

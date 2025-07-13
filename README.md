@@ -15,10 +15,11 @@ A comprehensive tool for scraping, storing, and analyzing historical nuclear rea
 ## Installation
 
 1. **Clone or download the project files**
-2. **Install dependencies:**
+2. **Install Python dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
+3. **For the Django API and React frontend, see the [Web Application Setup](#web-application-setup) section below**
 
 ## Quick Start
 
@@ -155,6 +156,86 @@ Check `nrc_scraper.log` for detailed error information.
 ├── nrc_scraper.log        # Scraping log file
 └── *.db                   # SQLite database files
 ```
+
+## Web Application Setup
+
+This project includes a Django REST API backend and a React frontend for visualizing nuclear reactor data on an interactive US map.
+
+### Django Backend Setup
+
+1. **Navigate to the API directory:**
+   ```bash
+   cd nucleartimeseries_api
+   ```
+
+2. **Install backend dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Run database migrations:**
+   ```bash
+   python manage.py migrate
+   ```
+
+4. **Load reactor data (if needed):**
+   ```bash
+   python manage.py seed --start-year 2025 --end-year 2025 --max-dates 30
+   ```
+
+5. **Start the Django development server:**
+   ```bash
+   python manage.py runserver
+   ```
+   
+   The API will be available at `http://localhost:8000`
+
+### React Frontend Setup
+
+1. **Navigate to the frontend directory:**
+   ```bash
+   cd nucleartimeseries_frontend/my-app
+   ```
+
+2. **Install Node.js dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+   
+   The frontend will be available at `http://localhost:5173`
+
+### API Endpoints
+
+- `GET /api/reactor/{date}/` - Get all reactors for a specific date (YYYY-MM-DD format)
+- `GET /api/reactor/{date}/{reactor_id}/` - Get detailed reactor information including forecasts
+
+### Frontend Features
+
+- **Interactive US Map**: Plotly-powered map showing reactor locations
+- **Real-time Data**: Fetches current reactor status from Django API
+- **Color-coded Status**: 
+  - 🔴 Red: Offline reactors (0% power)
+  - 🟠 Orange: Low power reactors
+  - 🟡 Yellow: Medium power reactors
+  - 🟢 Green: Full power reactors
+- **Detailed Modal**: Click any reactor to view:
+  - Current power level and status
+  - Prophet forecast predictions
+  - Interactive forecast charts
+  - Stub outage detection results
+- **Offset Positioning**: Multiple units at same location are slightly offset for visibility
+
+### Technology Stack
+
+- **Backend**: Django 4.0.6, Django REST Framework, PostgreSQL/SQLite
+- **Frontend**: React 19, TypeScript, Vite, Plotly.js
+- **Forecasting**: Prophet (Facebook's time series forecasting tool)
+- **Cloud Storage**: AWS S3 for forecast chart hosting
 
 ## Sample Data Points
 
