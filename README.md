@@ -1,196 +1,100 @@
-# NRC Nuclear Reactor Status Data Scraper
+# Nuclear Reactor Time Series Forecasting & Visualization
 
-A comprehensive tool for scraping, storing, and analyzing historical nuclear reactor status data from the U.S. Nuclear Regulatory Commission (NRC).
+A comprehensive web application for visualizing and forecasting U.S. nuclear reactor power output data. Features an interactive map interface, real-time status monitoring, and Prophet-based time series forecasting.
 
 ## Features
 
-- **Historical Data Collection**: Scrape daily reactor status reports from 1999-2025
-- **SQLite Database Storage**: Automatically store data in a structured database
-- **Resume Capability**: Continue scraping from where you left off
-- **Data Analysis Tools**: Built-in analysis and visualization capabilities
-- **Respectful Scraping**: Configurable delays to be respectful to NRC servers
-- **Error Handling**: Robust error handling and logging
-- **Multiple Database Support**: Create separate databases for different datasets
+- **Interactive US Map**: Real-time visualization of nuclear reactor locations and power levels
+- **Time Series Forecasting**: Prophet-based predictions for reactor power output
+- **Reactor Detail Views**: Click any reactor for detailed status, forecasts, and interactive charts
+- **Color-coded Status Indicators**: Visual power level representation (red=offline, orange=low, yellow=medium, green=full)
+- **Offset Positioning**: Smart positioning for reactors sharing coordinates
+- **AWS S3 Integration**: Cloud-hosted interactive forecast charts
+- **REST API**: Django-based API for data access and forecasting
+- **Responsive Design**: Modern React TypeScript frontend
 
-## Installation
+## Technology Stack
 
-1. **Clone or download the project files**
-2. **Install Python dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. **For the Django API and React frontend, see the [Web Application Setup](#web-application-setup) section below**
+- **Backend**: Django 4.0.6, Django REST Framework, SQLite/PostgreSQL
+- **Frontend**: React 19, TypeScript, Vite, Plotly.js
+- **Forecasting**: Prophet (Facebook's time series forecasting library)
+- **Map Visualization**: Plotly.js with custom US map styling
+- **Cloud Storage**: AWS S3 for forecast chart hosting
+- **Task Queue**: Celery with Redis for background processing
 
-## Quick Start
-
-### Option 1: Interactive Menu (Recommended for Beginners)
-```bash
-python scrape_nrc_data.py
-```
-This will show you a menu with options to:
-- Scrape recent data (2025 only)
-- Scrape sample years (2020-2022) 
-- Scrape all historical data (1999-2025)
-- View database statistics
-
-### Option 2: Command Line (Advanced Users)
-```bash
-# Scrape all historical data (1999-2025)
-python nrc_data_scraper.py
-
-# Scrape specific years
-python nrc_data_scraper.py --start-year 2020 --end-year 2022
-
-# Resume from a specific date
-python nrc_data_scraper.py --resume-from 20220515
-
-# Use custom database and delay
-python nrc_data_scraper.py --db-path my_data.db --delay 2.0
-
-# Show database statistics only
-python nrc_data_scraper.py --stats-only
-```
-
-## Database Schema
-
-The data is stored in a SQLite database with the following structure:
-
-```sql
-CREATE TABLE reactor_status (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT NOT NULL,              -- YYYYMMDD format
-    year INTEGER NOT NULL,           -- Year extracted from date
-    region TEXT,                     -- NRC Region (Region 1, Region 2, etc.)
-    unit_name TEXT NOT NULL,         -- Reactor name (e.g., "Beaver Valley 1")
-    power_level INTEGER,             -- Power level percentage (0-100)
-    down_date TEXT,                  -- Date reactor went down (if applicable)
-    reason_comment TEXT,             -- Reason for reduced power/outage
-    change_indicator TEXT,           -- "*" if changed in past 24 hours
-    scrams_count TEXT,               -- Number of scrams in past 24 hours
-    scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-## Data Analysis
-
-### Basic Analysis
-```bash
-# Analyze all data
-python analyze_nrc_data.py
-
-# Analyze specific reactor
-python analyze_nrc_data.py --reactor "Beaver Valley 1"
-
-# Generate plots
-python analyze_nrc_data.py --plots
-
-# Export summary report
-python analyze_nrc_data.py --export
-```
-
-### Using in Python Scripts
-```python
-from analyze_nrc_data import NRCDataAnalyzer
-
-# Load and analyze data
-analyzer = NRCDataAnalyzer("nrc_reactor_data.db")
-analyzer.basic_stats()
-analyzer.outage_analysis()
-analyzer.power_level_trends()
-```
-
-## Example Analyses You Can Perform
-
-1. **Reactor Performance Tracking**: Monitor individual reactor performance over time
-2. **Outage Pattern Analysis**: Identify common outage reasons and seasonal patterns
-3. **Capacity Factor Calculations**: Calculate fleet-wide capacity factors by year
-4. **Regional Comparisons**: Compare performance across different NRC regions
-5. **Maintenance Scheduling**: Analyze when reactors typically go offline for maintenance
-6. **Economic Dispatch**: Study reduced power operations for economic reasons
-
-## Important Notes
-
-### Data Availability
-- NRC reports are typically published Monday-Friday (weekends are skipped)
-- Some dates may not have reports available
-- Data format and availability may vary for older years (1999-2005)
-
-### Respectful Usage
-- Default delay is 1 second between requests
-- Increase delay if you encounter rate limiting
-- The NRC website is a government resource - be respectful
-
-### Data Quality
-- Data is scraped "as-is" from NRC reports
-- Some historical data may have formatting inconsistencies
-- Always validate critical analyses with official NRC sources
-
-## Performance Estimates
-
-Scraping the complete historical dataset (1999-2025):
-- **Total dates**: ~6,800 weekdays
-- **Estimated time**: 2-3 hours (at 1 second delay)
-- **Database size**: ~50-100 MB
-- **Total records**: ~500,000-1,000,000
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Network timeouts**: Increase the `--delay` parameter
-2. **Missing lxml**: Install with `pip install lxml`
-3. **Database locked**: Make sure no other process is using the database
-4. **Memory issues**: For large datasets, consider processing data in chunks
-
-### Error Logs
-Check `nrc_scraper.log` for detailed error information.
-
-## File Structure
+## Project Structure
 
 ```
-├── nrc_data_scraper.py     # Main scraper class and CLI
-├── scrape_nrc_data.py      # Interactive menu interface
-├── analyze_nrc_data.py     # Data analysis tools
-├── requirements.txt        # Python dependencies
-├── README.md              # This file
-├── nrc_scraper.log        # Scraping log file
-└── *.db                   # SQLite database files
+NuclearTimeSeries/
+├── README.md                          # This file
+├── requirements.txt                   # Root dependencies
+├── Extract.ipynb                      # Data exploration notebook
+├── Notes.txt                          # Development notes
+├── nucleartimeseries_api/            # Django backend
+│   ├── manage.py                     # Django management script
+│   ├── requirements.txt              # Backend dependencies
+│   ├── db.sqlite3                   # SQLite database
+│   ├── nrc_data/                    # Main Django app
+│   │   ├── models.py                # Database models
+│   │   ├── views.py                 # API endpoints
+│   │   ├── urls.py                  # URL routing
+│   │   ├── serializers.py           # API serializers
+│   │   ├── forecast.py              # Prophet forecasting logic
+│   │   ├── outage_detection.py      # Outage detection algorithms
+│   │   └── management/commands/     # Django management commands
+│   └── nucleartimeseries_api/       # Django project settings
+└── nucleartimeseries_frontend/       # React frontend
+    └── my-app/                      # Vite React app
+        ├── src/components/          # React components
+        │   └── ReactorMap.tsx       # Main map component
+        ├── package.json             # Frontend dependencies
+        └── vite.config.ts           # Vite configuration
 ```
 
-## Web Application Setup
+## Installation & Setup
 
-This project includes a Django REST API backend and a React frontend for visualizing nuclear reactor data on an interactive US map.
+### Prerequisites
 
-### Django Backend Setup
+- Python 3.8+
+- Node.js 16+
+- Redis (for Celery task queue)
+
+### Backend Setup (Django API)
 
 1. **Navigate to the API directory:**
    ```bash
    cd nucleartimeseries_api
    ```
 
-2. **Install backend dependencies:**
+2. **Create and activate virtual environment:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install backend dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Run database migrations:**
+4. **Run database migrations:**
    ```bash
    python manage.py migrate
    ```
 
-4. **Load reactor data (if needed):**
+5. **Seed the database with reactor data (optional):**
    ```bash
    python manage.py seed --start-year 2025 --end-year 2025 --max-dates 30
    ```
 
-5. **Start the Django development server:**
+6. **Start the Django development server:**
    ```bash
    python manage.py runserver
    ```
    
    The API will be available at `http://localhost:8000`
 
-### React Frontend Setup
+### Frontend Setup (React App)
 
 1. **Navigate to the frontend directory:**
    ```bash
@@ -209,62 +113,231 @@ This project includes a Django REST API backend and a React frontend for visuali
    
    The frontend will be available at `http://localhost:5173`
 
-### API Endpoints
+## Database Schema
 
+The application uses Django models with the following structure:
+
+### Reactor Model
+```python
+class Reactor(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    region = models.CharField(max_length=3, choices=REGION_CHOICES)  # I, II, III, IV
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+```
+
+### ReactorStatus Model
+```python
+class ReactorStatus(models.Model):
+    reactor = models.ForeignKey('Reactor', on_delete=models.CASCADE)
+    report_date = models.DateField()
+    unit = models.CharField(max_length=30)  # e.g., "Beaver Valley 1"
+    power = models.IntegerField()  # Power level 0-100%
+    down_date = models.DateField(null=True, blank=True)
+    reason = models.CharField(max_length=255, null=True, blank=True)
+    changed = models.BooleanField(default=False)
+    scrams = models.IntegerField(null=True, blank=True)
+```
+
+### ReactorForecast Model
+```python
+class ReactorForecast(models.Model):
+    reactor = models.ForeignKey('Reactor', on_delete=models.CASCADE)
+    df = models.DateField()  # Forecast date
+    yhat = models.FloatField()  # Predicted power
+    yhat_lower = models.FloatField()  # Lower confidence interval
+    yhat_upper = models.FloatField()  # Upper confidence interval
+    image_url = models.URLField()  # S3 URL for interactive chart
+    reactorstatus = models.ForeignKey('ReactorStatus', on_delete=models.CASCADE)
+```
+
+### StubOutage Model
+```python
+class StubOutage(models.Model):
+    reactor = models.ForeignKey('Reactor', on_delete=models.CASCADE)
+    date_detected = models.DateField()
+    description = models.TextField(blank=True)
+    auto_detected = models.BooleanField(default=False)
+    confirmed = models.BooleanField(default=False)
+    reactorstatus = models.ForeignKey('ReactorStatus', on_delete=models.CASCADE)
+```
+
+## API Endpoints
+
+### Reactor Data
 - `GET /api/reactor/{date}/` - Get all reactors for a specific date (YYYY-MM-DD format)
+  ```json
+  [
+    {
+      "name": "Beaver Valley 1",
+      "region": "I",
+      "latitude": 40.6219,
+      "longitude": -80.4336,
+      "reactorstatus": [
+        {
+          "report_date": "2025-07-11",
+          "unit": "Beaver Valley 1",
+          "power": 100,
+          "reactor": 1
+        }
+      ]
+    }
+  ]
+  ```
+
 - `GET /api/reactor/{date}/{reactor_id}/` - Get detailed reactor information including forecasts
+  ```json
+  {
+    "report_date": "2025-07-11",
+    "unit": "Beaver Valley 1",
+    "power": 100,
+    "stuboutage": false,
+    "reactorforecast_set": [
+      {
+        "df": "2025-07-12",
+        "yhat": 98.5,
+        "yhat_lower": 85.2,
+        "yhat_upper": 100.0,
+        "image_url": "https://nuclearforecast.s3.us-east-1.amazonaws.com/..."
+      }
+    ],
+    "stuboutage_set": []
+  }
+  ```
 
-### Frontend Features
+## Frontend Features
 
-- **Interactive US Map**: Plotly-powered map showing reactor locations
-- **Real-time Data**: Fetches current reactor status from Django API
-- **Color-coded Status**: 
-  - 🔴 Red: Offline reactors (0% power)
-  - 🟠 Orange: Low power reactors
-  - 🟡 Yellow: Medium power reactors
-  - 🟢 Green: Full power reactors
-- **Detailed Modal**: Click any reactor to view:
-  - Current power level and status
-  - Prophet forecast predictions
-  - Interactive forecast charts
-  - Stub outage detection results
-- **Offset Positioning**: Multiple units at same location are slightly offset for visibility
+### Interactive Map
+- **US Geographic Map**: Plotly-powered map with custom dark theme styling
+- **Reactor Markers**: Color-coded dots representing power levels:
+  - 🔴 **Red**: Offline reactors (0% power)
+  - 🟠 **Orange**: Low power reactors (1-25%)
+  - 🟡 **Yellow**: Medium power reactors (26-75%)
+  - 🟢 **Green**: High power reactors (76-100%)
+- **Smart Positioning**: Reactors at the same location are offset for visibility
+- **Hover Information**: Plant name, unit, power level, and region
 
-### Technology Stack
+### Reactor Detail Modal
+Click any reactor marker to view:
+- **Current Status**: Power level, report date, stub outage status
+- **Forecast Data**: Prophet predictions with confidence intervals
+- **Interactive Charts**: Embedded S3-hosted forecast visualizations
+- **Historical Context**: Stub outage detection results
 
-- **Backend**: Django 4.0.6, Django REST Framework, PostgreSQL/SQLite
-- **Frontend**: React 19, TypeScript, Vite, Plotly.js
-- **Forecasting**: Prophet (Facebook's time series forecasting tool)
-- **Cloud Storage**: AWS S3 for forecast chart hosting
+### Dark Theme Design
+- **Modern UI**: Dark blue-gray color scheme optimized for data visualization
+- **High Contrast**: White text and bright markers for excellent readability
+- **Professional Styling**: Consistent with nuclear industry dashboards
 
-## Sample Data Points
+## Forecasting System
 
-The scraper captures data like:
-- **Beaver Valley 1**: 100% power, no outages
-- **Millstone 3**: 0% power, down since 4/11/2025 for refueling outage
-- **Hope Creek 1**: 88% power, reduced for maintenance
-- **Vogtle 4**: 30% power, reduced for maintenance
+The application uses Facebook's Prophet library for time series forecasting:
+
+### Features
+- **Automatic Seasonality Detection**: Handles daily, weekly, and yearly patterns
+- **Trend Analysis**: Identifies long-term power output trends
+- **Confidence Intervals**: Provides uncertainty bounds for predictions
+- **Outlier Handling**: Robust to missing data and anomalies
+
+### Chart Generation
+- **Interactive Plotly Charts**: Generated and stored on AWS S3
+- **Real-time Embedding**: Charts are embedded directly in the React modal
+- **Date-specific URLs**: S3 paths include forecast dates for organization
+
+## Usage Examples
+
+### Starting the Application
+```bash
+# Terminal 1: Start Django backend
+cd nucleartimeseries_api
+python manage.py runserver
+
+# Terminal 2: Start React frontend  
+cd nucleartimeseries_frontend/my-app
+npm run dev
+```
+
+### Viewing Reactor Data
+1. Open `http://localhost:5173` in your browser
+2. Select a date using the date picker
+3. View reactor locations on the interactive US map
+4. Click any reactor marker for detailed information
+5. Explore forecast charts and historical data
+
+### API Usage
+```bash
+# Get all reactors for July 11, 2025
+curl http://localhost:8000/api/reactor/2025-07-11/
+
+# Get detailed info for reactor ID 1
+curl http://localhost:8000/api/reactor/2025-07-11/1/
+```
+
+## Development Notes
+
+### Key Components
+- **ReactorMap.tsx**: Main map visualization component with click handlers
+- **forecast.py**: Prophet-based forecasting logic and S3 chart generation
+- **outage_detection.py**: Algorithms for detecting reactor outages
+- **models.py**: Django ORM models for reactor data
+
+### Offset Algorithm
+For reactors sharing coordinates (e.g., multi-unit plants):
+```typescript
+const offsetDistance = 0.02; // degrees
+const patterns = [
+  [0, 0],           // First unit: no offset
+  [offsetDistance, 0],     // Second unit: east
+  [0, offsetDistance],     // Third unit: north
+  [-offsetDistance, 0],    // Fourth unit: west
+  [0, -offsetDistance]     // Fifth unit: south
+];
+```
+
+### AWS Integration
+Forecast charts are generated as interactive HTML files and uploaded to S3:
+```
+https://nuclearforecast.s3.us-east-1.amazonaws.com/forecasts/Reactor_Name_2025-07-11.html
+```
+
+## Configuration
+
+### Environment Variables
+Create a `.env` file in the Django directory:
+```bash
+DEBUG=True
+SECRET_KEY=your-secret-key
+AWS_ACCESS_KEY_ID=your-aws-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret
+AWS_STORAGE_BUCKET_NAME=nuclearforecast
+```
+
+### CORS Settings
+The Django backend is configured to allow cross-origin requests from the React development server.
 
 ## Contributing
 
-Feel free to submit issues or pull requests to improve the scraper:
-- Add support for additional data fields
-- Improve error handling
-- Add new analysis features
-- Optimize scraping performance
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/new-feature`)
+3. Make your changes
+4. Run tests: `python manage.py test`
+5. Commit your changes (`git commit -am 'Add new feature'`)
+6. Push to the branch (`git push origin feature/new-feature`)
+7. Create a Pull Request
+
+## Data Sources
+
+- **Nuclear Regulatory Commission**: Reactor status data and power output reports
+- **Plant Coordinates**: Manual geocoding of nuclear facility locations
+- **Regional Classifications**: NRC regional boundaries
 
 ## Legal Notice
 
-This tool scrapes publicly available data from the NRC website. Always:
-- Respect the NRC's website terms of use
-- Use reasonable delays between requests
-- Cite the NRC as the data source in any publications
+This application visualizes publicly available data from the U.S. Nuclear Regulatory Commission. Always:
 - Verify critical information with official NRC sources
-
-## Data Source
-
-Original data source: [NRC Power Reactor Status Reports](https://www.nrc.gov/reading-rm/doc-collections/event-status/reactor-status/)
+- Respect data usage terms and conditions
+- Cite the NRC as the original data source in any publications
 
 ---
 
-*This tool is not affiliated with or endorsed by the U.S. Nuclear Regulatory Commission.* 
+*This application is not affiliated with or endorsed by the U.S. Nuclear Regulatory Commission.* 
